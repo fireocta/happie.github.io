@@ -1,0 +1,246 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Happy Birthday!</title>
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Quicksand', sans-serif;
+      background: linear-gradient(135deg, #fceaff, #ffe2f3);
+      text-align: center;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    body {
+      position: relative;
+    }
+    h1 {
+      font-size: 3em;
+      color: #ff5ca1;
+      font-family: 'Pacifico', cursive;
+      margin-top: 20px;
+    }
+    .gift-btn, .gallery-btn, .secret-btn {
+      margin: 10px;
+      background-color: #ff84b7;
+      border: none;
+      padding: 15px 30px;
+      font-size: 1.2em;
+      color: white;
+      border-radius: 25px;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      transition: transform 0.2s ease;
+    }
+    .gift-btn:hover, .gallery-btn:hover, .secret-btn:hover {
+      transform: scale(1.05);
+    }
+    .messages {
+      margin: 20px auto;
+      max-width: 500px;
+      background: white;
+      border-radius: 15px;
+      padding: 20px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+      display: none;
+    }
+    .message {
+      margin: 10px 0;
+      color: #ff5ca1;
+      font-size: 1.2em;
+      animation: fadeIn 1s ease forwards;
+    }
+    .gallery {
+      margin-top: 20px;
+      display: none;
+    }
+    .gallery img {
+      width: 250px;
+      height: 250px;
+      object-fit: cover;
+      border-radius: 15px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      transition: opacity 0.5s ease-in-out;
+      opacity: 0;
+    }
+    .gallery img.show {
+      opacity: 1;
+    }
+    #secretGallery {
+      display: none;
+      margin-top: 20px;
+    }
+    #secretGallery img {
+      width: 300px;
+      height: 500px;
+      object-fit: cover;
+      border-radius: 20px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+      transition: opacity 0.5s ease-in-out;
+      opacity: 0;
+    }
+    #secretGallery img.show {
+      opacity: 1;
+    }
+    #codePrompt {
+      display: none;
+      margin-top: 20px;
+    }
+    #codePrompt input {
+      padding: 10px;
+      font-size: 1em;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      margin-right: 10px;
+    }
+    .stars {
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      background: transparent;
+      overflow: hidden;
+      z-index: 0;
+      pointer-events: none;
+    }
+    .star {
+      position: absolute;
+      background: white;
+      width: 2px;
+      height: 2px;
+      border-radius: 50%;
+      animation: twinkle 2s infinite ease-in-out;
+    }
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.2; }
+      50% { opacity: 1; }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="stars" id="stars"></div>
+  <h1>Happy Birthday!</h1>
+  <audio id="bgMusic" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_77cdce55b4.mp3?filename=birthday-party-142076.mp3" autoplay loop></audio>
+  <button class="gift-btn" onclick="openGift()">Open Your Gift!</button>
+  <div class="messages" id="messages"></div>
+  <button class="gallery-btn" onclick="startSlideshow()">Start Slideshow</button>
+  <div class="gallery" id="gallery">
+    <img id="galleryImage" src="" alt="Memory" />
+  </div>
+  <button class="secret-btn" onclick="promptCode()">???</button>
+  <div id="codePrompt">
+    <input type="text" id="codeInput" placeholder="secret code(hint: Future hus)" />
+    <button class="" onclick="checkCode()">Reveal</button>
+  </div>
+  <div id="secretGallery">
+    <img id="secretImage" src="" alt="Secret Surprise" />
+  </div>  <script>
+    const birthdayMessages = [
+      "You're amazing!",
+      "Hope all your wishes come true!",
+      "You're one of a kind!",
+      "Have a blast today!",
+      "Here's to more adventures!"
+    ];
+
+    const galleryImages = [
+      "Images/1.jpg",
+      "Images/2.jpg",
+      "Images/3.jpg",
+      "Images/4.jpg"
+    ];
+    let currentImage = 0;
+    let slideshowInterval;
+
+    function openGift() {
+      confetti({ particleCount: 200, spread: 100, origin: { y: 0.6 } });
+      const container = document.getElementById('messages');
+      container.innerHTML = '';
+      container.style.display = 'block';
+      birthdayMessages.forEach((msg, index) => {
+        setTimeout(() => {
+          const p = document.createElement('p');
+          p.className = 'message';
+          p.textContent = msg;
+          container.appendChild(p);
+        }, index * 500);
+      });
+    }
+
+    function startSlideshow() {
+      const gallery = document.getElementById('gallery');
+      const img = document.getElementById('galleryImage');
+      gallery.style.display = 'block';
+      if (slideshowInterval) clearInterval(slideshowInterval);
+      showNextImage();
+      slideshowInterval = setInterval(showNextImage, 2500);
+    }
+
+    function showNextImage() {
+      const img = document.getElementById('galleryImage');
+      img.classList.remove('show');
+      setTimeout(() => {
+        img.src = galleryImages[currentImage];
+        img.classList.add('show');
+        currentImage = (currentImage + 1) % galleryImages.length;
+      }, 200);
+    }
+
+    function promptCode() {
+      document.getElementById('codePrompt').style.display = 'block';
+    }
+
+    const secretImages = [
+      "Images/ace1.jpg",
+      "Images/ace2.jpg",
+      "Images/ace3.jpg"
+    ];
+    let secretIndex = 0;
+    let secretInterval;
+
+    function checkCode() {
+      const code = document.getElementById('codeInput').value;
+      if (code === 'ACE') {
+        document.getElementById('codePrompt').style.display = 'none';
+        const gallery = document.getElementById('secretGallery');
+        const img = document.getElementById('secretImage');
+        gallery.style.display = 'block';
+        if (secretInterval) clearInterval(secretInterval);
+        showNextSecretImage();
+        secretInterval = setInterval(showNextSecretImage, 2500);
+      } else {
+        alert('Oops! Wrong code.');
+      }
+    }
+
+    function showNextSecretImage() {
+      const img = document.getElementById('secretImage');
+      img.classList.remove('show');
+      setTimeout(() => {
+        img.src = secretImages[secretIndex];
+        img.classList.add('show');
+        secretIndex = (secretIndex + 1) % secretImages.length;
+      }, 200);
+    }
+
+    // Generate stars
+    const starContainer = document.getElementById('stars');
+    for (let i = 0; i < 100; i++) {
+      const star = document.createElement('div');
+      star.className = 'star';
+      star.style.top = Math.random() * 100 + '%';
+      star.style.left = Math.random() * 100 + '%';
+      star.style.animationDuration = (Math.random() * 3 + 1) + 's';
+      starContainer.appendChild(star);
+    }
+  </script></body>
+</html>
